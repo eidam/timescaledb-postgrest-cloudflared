@@ -1,0 +1,10 @@
+- hosts: 
+    - timescaledb
+  user: all
+
+  roles:
+   - { role: update-apt, tags: update-apt}
+   - { role: ufw, tags: ufw }
+   - { role: timescaledb, tags: timescaledb }
+   - { role: postgrest, tags: postgrest }
+   - { role: cloudflared, tags: cloudflared }

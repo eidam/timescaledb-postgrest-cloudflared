@@ -1,0 +1,47 @@
+- name: Create directories
+  file: path={{ item }} state=directory
+  with_items:
+    - /root/.cloudflared
+    - /opt/cloudflared
+    - /usr/local/cloudflared
+
+- name: Check if cloudflared is installed
+  command: dpkg-query -W cloudflared
+  register: cloudflared_check_deb
+  failed_when: cloudflared_check_deb.rc > 1
+  changed_when: cloudflared_check_deb.rc == 1
+
+- name: Download Cloudflared
+  get_url: 
+    url="https://bin.equinox.io/c/VdrWdbjqyF/cloudflared-stable-linux-amd64.deb"
+    dest="/opt/cloudflared/cloudflared-stable-linux-amd64.deb"
+  when: cloudflared_check_deb.rc == 1
+
+- name: Install cloudflared
+  apt: deb="/opt/cloudflared/cloudflared-stable-linux-amd64.deb"
+  when: cloudflared_check_deb.rc == 1  
+
+- name: "Copy cloudflared config"
+  ansible.builtin.template:
+    src: cloudflared.yml.j2
+    dest: /usr/local/cloudflared/config.yml
+  register: cloudflared_config_changed
+
+- name: "Copy systemd cloudflared config"
+  ansible.builtin.template:
+    src: cloudflared.service.j2
+    dest: /etc/systemd/system/cloudflared.service
+  register: cloudflared_config_changed
+
+- name: Make sure a cloudflared service is running
+  ansible.builtin.systemd:
+    state: started
+    enabled: yes
+    name: cloudflared
+
+- name: Make sure a cloudflared service is restarted
+  ansible.builtin.systemd:
+    state: restarted
+    daemon-reload: yes
+    name: cloudflared
+  when: cloudflared_config_changed

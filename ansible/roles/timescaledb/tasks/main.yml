@@ -1,0 +1,21 @@
+- name: Add an Postgres Apt signing key
+  ansible.builtin.apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Add Postgres repository
+  ansible.builtin.apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main
+
+- name: Add Timescale repository from PPA
+  ansible.builtin.apt_repository:
+    repo: ppa:timescale/timescaledb-ppa
+
+- name: Install Timescale
+  apt:
+    name: timescaledb-2-postgresql-13
+    state: present
+
+- name: Tune Postgres 13 settings
+  command: timescaledb-tune --yes
+

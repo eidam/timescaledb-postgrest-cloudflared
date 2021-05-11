@@ -1,0 +1,17 @@
+[Unit]
+Description=cloudflared service
+After=network-online.target
+Requires=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/usr/local/bin/cloudflared tunnel --config /usr/local/cloudflared/config.yml run
+LimitNOFILE=32000
+LimitNOFILESoft=32000
+
+[Install]
+WantedBy=multi-user.target

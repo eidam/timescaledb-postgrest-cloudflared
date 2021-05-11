@@ -1,0 +1,32 @@
+- name: Install ufw
+  apt:
+   name: ["ufw"]
+   state: present
+  register: apt_action
+  retries: 100
+  until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
+
+- name: Allow outgoing
+  ufw:
+    direction: outgoing
+    policy: allow
+
+- name: Allow SSH
+  ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Set limit to SSH
+  ufw:
+    rule: limit
+    port: ssh
+    proto: tcp
+
+- name: Deny incoming
+  ufw:
+    direction: incoming
+    policy: deny
+
+- name: Enable UFW
+  ufw:
+    state: enabled

@@ -1,0 +1,13 @@
+tunnel: "CF_TUNEL_ID" # change me, you can find the value in tunnel-credentials.json
+credentials-file: "/root/.cloudflared/tunnel-credentials.json"
+
+ingress:
+  - service: unix:/opt/postgrest/run/.s.PGRST.15432 # do not change
+    hostname: subdomainoftimescaledbrestendpoint.yourhost.com
+
+  # keep this if you wanna also use web ssh terminal 
+  - service: ssh://localhost:22
+    hostname: ${cf_tunnel_name}.infra.statusflare.com
+
+  # default rule
+  - service: http_status:404

@@ -1,0 +1,47 @@
+- name: Create directories
+  file: path={{ item }} state=directory
+  with_items:
+    - /opt/postgrest
+    - /opt/postgrest/run
+
+- name: Create user (postgrest) matching PSQL role 
+  ansible.builtin.user:
+    name: postgrest
+
+- name: Change ownership of a directory
+  ansible.builtin.file:
+    path: /opt/postgrest
+    state: directory
+    recurse: yes
+    owner: postgrest
+
+- name: "Copy postgrest config"
+  ansible.builtin.template:
+    src: postgrest.conf.j2
+    dest: /opt/postgrest/postgrest.conf
+  register: postgrest_config_changed
+  
+- name: Download and unarchive postgrest binary
+  ansible.builtin.unarchive:
+    src: https://github.com/PostgREST/postgrest/releases/download/v7.0.1/postgrest-v7.0.1-linux-x64-static.tar.xz
+    dest: /usr/local/bin/
+    remote_src: yes
+
+- name: "Copy systemd postgrest config"
+  ansible.builtin.template:
+    src: postgrest.service.j2
+    dest: /etc/systemd/system/postgrest.service
+  register: postgrest_config_changed
+
+- name: Make sure a postgrest service is running
+  ansible.builtin.systemd:
+    state: started
+    enabled: yes
+    name: postgrest
+
+- name: Make sure a postgrest service is restarted
+  ansible.builtin.systemd:
+    state: restarted
+    daemon-reload: yes
+    name: postgrest
+  when: postgrest_config_changed
